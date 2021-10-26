@@ -66,7 +66,7 @@ export default function LeftDrawer(props: any) {
         ].map((text, index) => (
           <ListItem
             to={`/${
-              text !== "Dashboard" ? text.replace(" ", "").toLowerCase() : ""
+              text !== "Dashboard" ? text.replace(" ", "-").toLowerCase() : ""
             }`}
             component={Link}
             className={classes.listItem}

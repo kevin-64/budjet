@@ -7,4 +7,5 @@ export interface RecurringEvent {
   description: string;
   amount: number;
   category: Category;
+  automatic: boolean;
 }

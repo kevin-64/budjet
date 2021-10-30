@@ -13,6 +13,7 @@ import LeftDrawer from "../../components/LeftDrawer";
 import MainContainer from "../../components/MainContainer";
 import RootContainer from "../../components/RootContainer";
 import { db } from "../lib/dbaccess";
+const moment = require("moment");
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -85,6 +86,7 @@ const EditContent = ({ id }: { id: string }) => {
         {
           name,
           color: `#${color.hex}` || "#000000",
+          creationDate: moment().format("MM/DD/YYYY"),
         },
         (err: Error | null, doc: any) => history.push("/accounts")
       );

@@ -5,6 +5,8 @@ import Export from "./export";
 import Dashboard from "./dashboard";
 import EditAccount from "./edit-accounts";
 import Accounts from "./accounts";
+import RecurringEvents from "./recurring-events";
+import EditRecurringEvent from "./edit-recurring-event";
 
 const App = () => {
   return (
@@ -15,6 +17,14 @@ const App = () => {
         <Route
           path="/edit-accounts"
           render={(props) => <EditAccount {...props} />}
+        />
+        <Route
+          path="/edit-recurring-event"
+          render={(props) => <EditRecurringEvent {...props} />}
+        />
+        <Route
+          path="/recurring-events"
+          render={(props) => <RecurringEvents {...props} />}
         />
         <Route path="/">
           <Dashboard />

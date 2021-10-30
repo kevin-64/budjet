@@ -1,7 +1,7 @@
 export enum Category {
-  income,
-  utility,
-  rent,
-  debt,
-  food,
+  income = "income",
+  utility = "utility",
+  rent = "rent",
+  debt = "debt",
+  food = "food",
 }

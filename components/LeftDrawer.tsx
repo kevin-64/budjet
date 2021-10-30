@@ -61,6 +61,7 @@ export default function LeftDrawer(props: any) {
           "Reconciliation",
           "Deadlines",
           "Expenses",
+          "Recurring Events",
           "Accounts",
           "Export",
         ].map((text, index) => (

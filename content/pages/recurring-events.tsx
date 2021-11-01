@@ -101,7 +101,7 @@ const RecurringEventsContent = () => {
       console.log(filter);
       db.recurringEvents
         .find(filter)
-        .sort({ creationDate: 1 })
+        .sort({ "periodicity.startDate": 1 })
         .exec((err: Error | null, docs: any[]) => {
           if (docs)
             setEvents(
@@ -208,9 +208,20 @@ const RecurringEventsContent = () => {
             <MenuItem aria-label="None" value="">
               (No filter)
             </MenuItem>
-            {Object.keys(Category).map((cat) => (
-              <MenuItem value={cat}>{cat}</MenuItem>
-            ))}
+            {Object.keys(Category)
+              .sort((cat1, cat2) => {
+                if (cat1 < cat2) {
+                  return -1;
+                }
+                if (cat1 > cat2) {
+                  return 1;
+                }
+
+                return 0;
+              })
+              .map((cat) => (
+                <MenuItem value={cat}>{cat}</MenuItem>
+              ))}
           </Select>
         </FormControl>
         <Button onClick={clearFilters} className={classes.clear}>

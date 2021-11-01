@@ -1,11 +1,15 @@
 import {
   Button,
   createStyles,
+  FormControl,
   Link,
   makeStyles,
   TextField,
   Theme,
   Toolbar,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@material-ui/core";
 import { DataGrid, GridColDef, GridCellParams } from "@material-ui/data-grid";
 import moment from "moment";
@@ -16,6 +20,7 @@ import LeftDrawer from "../../components/LeftDrawer";
 import MainContainer from "../../components/MainContainer";
 import RootContainer from "../../components/RootContainer";
 import { db } from "../lib/dbaccess";
+import { Category } from "../models/category";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -25,10 +30,18 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     mediumText: {
       minWidth: 400,
+      marginRight: 20,
     },
     clear: {
       backgroundColor: "#3f51b5",
       color: "#ffffff",
+      marginLeft: 10,
+    },
+    aroundSelect: {
+      marginLeft: 10,
+    },
+    select: {
+      minWidth: 250,
       marginLeft: 10,
     },
     tableContainer: {
@@ -43,9 +56,10 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-const AccountsContent = () => {
-  const [accounts, setAccounts] = useState<any[]>([]);
-  const [nameFilter, setNameFilter] = useState("");
+const ExpensesContent = () => {
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [descFilter, setDescFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
   const [idToDelete, setIdToDelete] = useState("");
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -55,55 +69,61 @@ const AccountsContent = () => {
   const classes = useStyles();
 
   useEffect(() => {
-    if (!nameFilter) {
-      db.accounts
+    if (!descFilter && !categoryFilter) {
+      db.singleEvents
         .find({})
-        .sort({ creationDate: 1 })
+        .sort({ date: 1 })
         .exec((err: Error | null, docs: any[]) => {
-          setAccounts(
+          setExpenses(
             docs.map((d) => {
               return {
                 ...d,
                 id: d._id,
-                creationDate: moment(d.creationDate).format("yyyy-MM-DD"),
               };
             })
           );
         });
     } else {
-      const filter: any = { name: new RegExp(nameFilter, "i") };
+      const filter: any = {};
+
+      if (descFilter) filter.description = new RegExp(descFilter, "i");
+      if (categoryFilter) filter.category = new RegExp(categoryFilter, "i");
 
       console.log(filter);
-      db.accounts
+      db.singleEvents
         .find(filter)
-        .sort({ creationDate: 1 })
+        .sort({ date: 1 })
         .exec((err: Error | null, docs: any[]) => {
           if (docs)
-            setAccounts(
+            setExpenses(
               docs.map((d) => {
                 return {
                   ...d,
                   id: d._id,
-                  creationDate: moment(d.creationDate).format("yyyy-MM-DD"),
                 };
               })
             );
         });
     }
     setRefresh(false);
-  }, [nameFilter, refresh]);
+  }, [descFilter, categoryFilter, refresh]);
 
   const clearFilters = () => {
-    setNameFilter("");
+    setDescFilter("");
+    setCategoryFilter("");
   };
 
-  const onNameFilterChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setNameFilter(event.target.value);
+  const onDescFilterChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setDescFilter(event.target.value);
+  };
+
+  const onCategoryFilterChange = (event: ChangeEvent<any>) => {
+    setCategoryFilter(event.target.value);
   };
 
   const onDelete = useCallback(() => {
     if (idToDelete) {
-      db.accounts.remove(
+      db.singleEvents.remove(
         { _id: idToDelete },
         (err: Error | null, amount: number) => setRefresh(true)
       );
@@ -112,30 +132,16 @@ const AccountsContent = () => {
   }, [idToDelete]);
 
   const columns: GridColDef[] = [
-    { field: "name", headerName: "Name", width: 400 },
+    { field: "description", headerName: "Description", width: 600 },
+    { field: "category", headerName: "Category", width: 400 },
+    { field: "amount", headerName: "Amount", width: 200 },
     {
-      field: "creationDate",
-      headerName: "Creation Date",
+      field: "date",
+      headerName: "Date",
       width: 200,
       renderCell: (params: GridCellParams) => (
         <>
-          <div>{moment(params.row.creationDate).format("MM/DD/yyyy")}</div>
-        </>
-      ),
-    },
-    {
-      field: "color",
-      headerName: "Color",
-      width: 200,
-      renderCell: (params: GridCellParams) => (
-        <>
-          <div
-            style={{
-              backgroundColor: params.getValue(params.id, "color") as string,
-              width: 200,
-              height: 20,
-            }}
-          ></div>
+          <div>{moment(params.row.date).format("MM/DD/yyyy")}</div>
         </>
       ),
     },
@@ -161,13 +167,42 @@ const AccountsContent = () => {
     <>
       <Toolbar className={classes.toolbar}>
         <TextField
-          id="name-filter"
+          id="desc-filter"
           className={classes.mediumText}
-          value={nameFilter}
-          onChange={onNameFilterChange}
+          value={descFilter}
+          onChange={onDescFilterChange}
           size="small"
-          label="Name"
+          label="Description"
         />
+        <FormControl className={classes.aroundSelect}>
+          <InputLabel className={classes.aroundSelect} htmlFor="categoryFilter">
+            Category
+          </InputLabel>
+          <Select
+            id="categoryFilter"
+            className={classes.select}
+            value={categoryFilter}
+            onChange={onCategoryFilterChange}
+          >
+            <MenuItem aria-label="None" value="">
+              (No filter)
+            </MenuItem>
+            {Object.keys(Category)
+              .sort((cat1, cat2) => {
+                if (cat1 < cat2) {
+                  return -1;
+                }
+                if (cat1 > cat2) {
+                  return 1;
+                }
+
+                return 0;
+              })
+              .map((cat) => (
+                <MenuItem value={cat}>{cat}</MenuItem>
+              ))}
+          </Select>
+        </FormControl>
         <Button onClick={clearFilters} className={classes.clear}>
           Clear filters
         </Button>
@@ -175,18 +210,18 @@ const AccountsContent = () => {
       <hr />
       <div className={classes.tableContainer}>
         <DataGrid
-          rows={accounts}
+          rows={expenses}
           columns={columns}
           pageSize={10}
           rowsPerPageOptions={[10]}
-          onRowDoubleClick={(row) => history.push(`edit-accounts?id=${row.id}`)}
+          onRowDoubleClick={(row) => history.push(`edit-expense?id=${row.id}`)}
         />
       </div>
-      <Button href="#/edit-accounts" className={classes.add} component={Link}>
+      <Button href="#/edit-expense" className={classes.add} component={Link}>
         Add
       </Button>
       <ConfirmDialog
-        prompt="this account"
+        prompt="this event"
         open={showDeleteDialog}
         setOpen={setShowDeleteDialog}
         setConfirm={onDelete}
@@ -195,14 +230,14 @@ const AccountsContent = () => {
   );
 };
 
-export default function Accounts(props: any) {
+export default function Expenses(props: any) {
   return (
     <RootContainer
-      title="Account list"
+      title="Expenses list"
       content={
         <>
           <LeftDrawer />
-          <MainContainer content={<AccountsContent />} />
+          <MainContainer content={<ExpensesContent />} />
         </>
       }
     />

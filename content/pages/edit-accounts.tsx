@@ -17,16 +17,7 @@ const moment = require("moment");
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
-    largeText: {
-      minWidth: 800,
-    },
-    smallText: {
-      maxWidth: 100,
-    },
     mediumText: {
-      minWidth: 250,
-    },
-    select: {
       minWidth: 250,
     },
     cancel: {

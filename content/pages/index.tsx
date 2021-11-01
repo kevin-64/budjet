@@ -7,6 +7,9 @@ import EditAccount from "./edit-accounts";
 import Accounts from "./accounts";
 import RecurringEvents from "./recurring-events";
 import EditRecurringEvent from "./edit-recurring-event";
+import Expenses from "./expenses";
+import EditExpense from "./edit-expense";
+// import Deadlines from "./deadlines";
 
 const App = () => {
   return (
@@ -19,13 +22,19 @@ const App = () => {
           render={(props) => <EditAccount {...props} />}
         />
         <Route
-          path="/edit-recurring-event"
-          render={(props) => <EditRecurringEvent {...props} />}
-        />
-        <Route
           path="/recurring-events"
           render={(props) => <RecurringEvents {...props} />}
         />
+        <Route
+          path="/edit-recurring-event"
+          render={(props) => <EditRecurringEvent {...props} />}
+        />
+        <Route path="/expenses" render={(props) => <Expenses {...props} />} />
+        <Route
+          path="/edit-expense"
+          render={(props) => <EditExpense {...props} />}
+        />
+        {/* <Route path="/deadlines" render={(props) => <Deadlines {...props} />} /> */}
         <Route path="/">
           <Dashboard />
         </Route>

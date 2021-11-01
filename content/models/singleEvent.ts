@@ -1,6 +1,6 @@
 import { Category } from "./category";
 
-export interface RecurringEvent {
+export interface SingleEvent {
   id: number;
   date: Date;
   description: string;

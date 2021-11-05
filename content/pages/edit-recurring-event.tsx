@@ -115,11 +115,16 @@ const EditContent = ({ id }: { id: string }) => {
           automatic,
         },
         (err: Error | null, doc: any) => {
-          const deadlines = getDeadlines(doc, doc._id)
-          if (deadlines.length) {
-            db.deadlines.insert(deadlines, (err: Error | null, docs: any[]) =>
+          if (!automatic) {
+            //automatic events do not need deadlines to remember them
+            const deadlines = getDeadlines(doc, doc._id)
+            if (deadlines.length) {
+              db.deadlines.insert(deadlines, (err: Error | null, docs: any[]) =>
+                history.push('/recurring-events')
+              )
+            } else {
               history.push('/recurring-events')
-            )
+            }
           } else {
             history.push('/recurring-events')
           }
@@ -148,12 +153,16 @@ const EditContent = ({ id }: { id: string }) => {
             { eventId: id, date: { $gte: today } },
             { multi: true },
             (err: Error | null, amount: number) => {
-              let deadlines = getDeadlines(updateObj, id)
-              if (deadlines.length) {
-                deadlines = deadlines.filter(d => d.date >= today)
-                db.deadlines.insert(deadlines, (err: Error | null, docs: any[]) =>
+              if (!updateObj.automatic) {
+                let deadlines = getDeadlines(updateObj, id)
+                if (deadlines.length) {
+                  deadlines = deadlines.filter(d => d.date >= today)
+                  db.deadlines.insert(deadlines, (err: Error | null, docs: any[]) =>
+                    history.push('/recurring-events')
+                  )
+                } else {
                   history.push('/recurring-events')
-                )
+                }
               } else {
                 history.push('/recurring-events')
               }

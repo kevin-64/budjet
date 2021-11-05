@@ -1,5 +1,5 @@
 export interface Account {
-  name: string;
-  color: string;
-  creationDate: Date;
+  name: string
+  color: string
+  creationDate: Date
 }

@@ -1,23 +1,11 @@
-import {
-  Button,
-  createStyles,
-  makeStyles,
-  Theme,
-  Toolbar,
-} from "@material-ui/core";
-import React, {
-  ChangeEvent,
-  useCallback,
-  useEffect,
-  useState,
-  useRef,
-} from "react";
-import LeftDrawer from "../../components/LeftDrawer";
-import MainContainer from "../../components/MainContainer";
-import RootContainer from "../../components/RootContainer";
-import { getDbContentForExport, importDbContent } from "../lib/dbaccess";
-import downloadJSON from "../lib/download";
-const moment = require("moment");
+import { Button, createStyles, makeStyles, Theme, Toolbar } from '@material-ui/core'
+import React, { ChangeEvent, useCallback, useEffect, useState, useRef } from 'react'
+import LeftDrawer from '../../components/LeftDrawer'
+import MainContainer from '../../components/MainContainer'
+import RootContainer from '../../components/RootContainer'
+import { getDbContentForExport, importDbContent } from '../lib/dbaccess'
+import downloadJSON from '../lib/download'
+const moment = require('moment')
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -26,44 +14,40 @@ const useStyles = makeStyles((theme: Theme) =>
       paddingLeft: 0,
     },
     export: {
-      backgroundColor: "#c9501c",
-      color: "#ffffff",
+      backgroundColor: '#c9501c',
+      color: '#ffffff',
     },
     import: {
-      backgroundColor: "#3f51b5",
-      color: "#ffffff",
+      backgroundColor: '#3f51b5',
+      color: '#ffffff',
       marginLeft: 10,
     },
   })
-);
+)
 
 const ExportContent = () => {
-  const classes = useStyles();
+  const classes = useStyles()
 
-  const fileRef = useRef<HTMLInputElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const exportDb = () => {
-    getDbContentForExport().then((res) => {
-      downloadJSON(
-        document,
-        res,
-        `dbExport-${moment().format("YYYY-MM-DD-hh-mm-ss")}.json`
-      );
-    });
-  };
+    getDbContentForExport().then(res => {
+      downloadJSON(document, res, `dbExport-${moment().format('YYYY-MM-DD-hh-mm-ss')}.json`)
+    })
+  }
 
   const importDb = (content: string) => {
-    importDbContent(content);
-  };
+    importDbContent(content)
+  }
 
   const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files && event.target.files[0];
+    const file = event.target.files && event.target.files[0]
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => importDb(reader.result as string);
-      reader.readAsText(file);
+      const reader = new FileReader()
+      reader.onload = e => importDb(reader.result as string)
+      reader.readAsText(file)
     }
-  };
+  }
 
   return (
     <>
@@ -71,15 +55,12 @@ const ExportContent = () => {
         <Button onClick={exportDb} className={classes.export}>
           Export database
         </Button>
-        <Button
-          onClick={() => fileRef.current?.click()}
-          className={classes.import}
-        >
+        <Button onClick={() => fileRef.current?.click()} className={classes.import}>
           Import database
         </Button>
         <input
           ref={fileRef}
-          style={{ display: "none" }}
+          style={{ display: 'none' }}
           type="file"
           name="file"
           accept="*.json"
@@ -89,8 +70,8 @@ const ExportContent = () => {
       </Toolbar>
       <hr />
     </>
-  );
-};
+  )
+}
 
 export default function Export(props: any) {
   return (
@@ -103,5 +84,5 @@ export default function Export(props: any) {
         </>
       }
     />
-  );
+  )
 }

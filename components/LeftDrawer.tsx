@@ -1,13 +1,13 @@
-import Drawer from "@material-ui/core/Drawer";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
-import React from "react";
-import { DRAWER_WIDTH } from "../config/constants";
-import { Link, useHistory } from "react-router-dom";
-import ArrowBackIcon from "@material-ui/icons/ArrowBack";
-import { ListItemIcon } from "@material-ui/core";
+import Drawer from '@material-ui/core/Drawer'
+import List from '@material-ui/core/List'
+import ListItem from '@material-ui/core/ListItem'
+import ListItemText from '@material-ui/core/ListItemText'
+import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
+import React from 'react'
+import { DRAWER_WIDTH } from '../config/constants'
+import { Link, useHistory } from 'react-router-dom'
+import ArrowBackIcon from '@material-ui/icons/ArrowBack'
+import { ListItemIcon } from '@material-ui/core'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -17,21 +17,21 @@ const useStyles = makeStyles((theme: Theme) =>
       flexShrink: 0,
     },
     backArrow: {
-      color: "#ffffff",
+      color: '#ffffff',
     },
     drawerPaper: {
       width: DRAWER_WIDTH,
-      backgroundColor: "#1c95c9",
+      backgroundColor: '#1c95c9',
     },
     listItem: {
-      color: "#ffffff",
+      color: '#ffffff',
     },
   })
-);
+)
 
 export default function LeftDrawer(props: any) {
-  const classes = useStyles();
-  const history = useHistory();
+  const classes = useStyles()
+  const history = useHistory()
 
   return (
     <Drawer
@@ -44,31 +44,25 @@ export default function LeftDrawer(props: any) {
     >
       <div className={classes.toolbar} />
       <List>
-        <ListItem
-          onClick={() => history.goBack()}
-          className={classes.listItem}
-          button
-        >
+        <ListItem onClick={() => history.goBack()} className={classes.listItem} button>
           <ListItemIcon>
             <ArrowBackIcon className={classes.backArrow} />
           </ListItemIcon>
         </ListItem>
         <ListItem />
         {[
-          "Dashboard",
-          "Budget",
-          "Cash flow",
-          "Reconciliation",
-          "Deadlines",
-          "Expenses",
-          "Recurring Events",
-          "Accounts",
-          "Export",
+          'Dashboard',
+          'Budget',
+          'Cash flow',
+          'Reconciliation',
+          'Deadlines',
+          'Expenses',
+          'Recurring Events',
+          'Accounts',
+          'Export',
         ].map((text, index) => (
           <ListItem
-            to={`/${
-              text !== "Dashboard" ? text.replace(" ", "-").toLowerCase() : ""
-            }`}
+            to={`/${text !== 'Dashboard' ? text.replace(' ', '-').toLowerCase() : ''}`}
             component={Link}
             className={classes.listItem}
             button
@@ -79,5 +73,5 @@ export default function LeftDrawer(props: any) {
         ))}
       </List>
     </Drawer>
-  );
+  )
 }

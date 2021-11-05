@@ -6,16 +6,16 @@ import {
   TextField,
   Theme,
   Toolbar,
-} from "@material-ui/core";
-import { DataGrid, GridColDef, GridCellParams } from "@material-ui/data-grid";
-import moment from "moment";
-import React, { ChangeEvent, useCallback, useEffect, useState } from "react";
-import { useHistory } from "react-router";
-import ConfirmDialog from "../../components/ConfirmDialog";
-import LeftDrawer from "../../components/LeftDrawer";
-import MainContainer from "../../components/MainContainer";
-import RootContainer from "../../components/RootContainer";
-import { db } from "../lib/dbaccess";
+} from '@material-ui/core'
+import { DataGrid, GridColDef, GridCellParams } from '@material-ui/data-grid'
+import moment from 'moment'
+import React, { ChangeEvent, useCallback, useEffect, useState } from 'react'
+import { useHistory } from 'react-router'
+import ConfirmDialog from '../../components/ConfirmDialog'
+import LeftDrawer from '../../components/LeftDrawer'
+import MainContainer from '../../components/MainContainer'
+import RootContainer from '../../components/RootContainer'
+import { db } from '../lib/dbaccess'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -27,32 +27,32 @@ const useStyles = makeStyles((theme: Theme) =>
       minWidth: 400,
     },
     clear: {
-      backgroundColor: "#3f51b5",
-      color: "#ffffff",
+      backgroundColor: '#3f51b5',
+      color: '#ffffff',
       marginLeft: 10,
     },
     tableContainer: {
       height: 450,
-      width: "100%",
+      width: '100%',
     },
     add: {
-      backgroundColor: "#c9501c",
-      color: "#ffffff",
+      backgroundColor: '#c9501c',
+      color: '#ffffff',
       marginTop: 10,
     },
   })
-);
+)
 
 const AccountsContent = () => {
-  const [accounts, setAccounts] = useState<any[]>([]);
-  const [nameFilter, setNameFilter] = useState("");
-  const [idToDelete, setIdToDelete] = useState("");
+  const [accounts, setAccounts] = useState<any[]>([])
+  const [nameFilter, setNameFilter] = useState('')
+  const [idToDelete, setIdToDelete] = useState('')
 
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [refresh, setRefresh] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [refresh, setRefresh] = useState(false)
 
-  const history = useHistory();
-  const classes = useStyles();
+  const history = useHistory()
+  const classes = useStyles()
 
   useEffect(() => {
     if (!nameFilter) {
@@ -61,77 +61,76 @@ const AccountsContent = () => {
         .sort({ creationDate: 1 })
         .exec((err: Error | null, docs: any[]) => {
           setAccounts(
-            docs.map((d) => {
+            docs.map(d => {
               return {
                 ...d,
                 id: d._id,
-                creationDate: moment(d.creationDate).format("yyyy-MM-DD"),
-              };
+                creationDate: moment.utc(d.creationDate).format('yyyy-MM-DD'),
+              }
             })
-          );
-        });
+          )
+        })
     } else {
-      const filter: any = { name: new RegExp(nameFilter, "i") };
+      const filter: any = { name: new RegExp(nameFilter, 'i') }
 
-      console.log(filter);
+      console.log(filter)
       db.accounts
         .find(filter)
         .sort({ creationDate: 1 })
         .exec((err: Error | null, docs: any[]) => {
           if (docs)
             setAccounts(
-              docs.map((d) => {
+              docs.map(d => {
                 return {
                   ...d,
                   id: d._id,
-                  creationDate: moment(d.creationDate).format("yyyy-MM-DD"),
-                };
+                  creationDate: moment.utc(d.creationDate).format('yyyy-MM-DD'),
+                }
               })
-            );
-        });
+            )
+        })
     }
-    setRefresh(false);
-  }, [nameFilter, refresh]);
+    setRefresh(false)
+  }, [nameFilter, refresh])
 
   const clearFilters = () => {
-    setNameFilter("");
-  };
+    setNameFilter('')
+  }
 
   const onNameFilterChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setNameFilter(event.target.value);
-  };
+    setNameFilter(event.target.value)
+  }
 
   const onDelete = useCallback(() => {
     if (idToDelete) {
-      db.accounts.remove(
-        { _id: idToDelete },
-        (err: Error | null, amount: number) => setRefresh(true)
-      );
-      setShowDeleteDialog(false);
+      db.accounts.remove({ _id: idToDelete }, (err: Error | null, amount: number) =>
+        setRefresh(true)
+      )
+      setShowDeleteDialog(false)
     }
-  }, [idToDelete]);
+  }, [idToDelete])
 
   const columns: GridColDef[] = [
-    { field: "name", headerName: "Name", width: 400 },
+    { field: 'name', headerName: 'Name', width: 400 },
     {
-      field: "creationDate",
-      headerName: "Creation Date",
+      field: 'creationDate',
+      headerName: 'Creation Date',
       width: 200,
       renderCell: (params: GridCellParams) => (
         <>
-          <div>{moment(params.row.creationDate).format("MM/DD/yyyy")}</div>
+          <div>{moment.utc(params.row.creationDate).format('MM/DD/yyyy')}</div>
         </>
       ),
     },
     {
-      field: "color",
-      headerName: "Color",
+      field: 'color',
+      headerName: 'Color',
       width: 200,
       renderCell: (params: GridCellParams) => (
         <>
           <div
             style={{
-              backgroundColor: params.getValue(params.id, "color") as string,
+              backgroundColor: params.getValue(params.id, 'color') as string,
               width: 200,
               height: 20,
             }}
@@ -140,22 +139,22 @@ const AccountsContent = () => {
       ),
     },
     {
-      field: "-delete-",
-      headerName: " ",
+      field: '-delete-',
+      headerName: ' ',
       renderCell: (params: GridCellParams) => {
         const onClick = () => {
-          setIdToDelete(params.row.id as string);
-          setShowDeleteDialog(true);
-        };
+          setIdToDelete(params.row.id as string)
+          setShowDeleteDialog(true)
+        }
 
         return (
-          <Button style={{ color: "#3f51b5" }} onClick={onClick}>
+          <Button style={{ color: '#3f51b5' }} onClick={onClick}>
             Delete
           </Button>
-        );
+        )
       },
     },
-  ];
+  ]
 
   return (
     <>
@@ -179,10 +178,10 @@ const AccountsContent = () => {
           columns={columns}
           pageSize={10}
           rowsPerPageOptions={[10]}
-          onRowDoubleClick={(row) => history.push(`edit-accounts?id=${row.id}`)}
+          onRowDoubleClick={row => history.push(`edit-account?id=${row.id}`)}
         />
       </div>
-      <Button href="#/edit-accounts" className={classes.add} component={Link}>
+      <Button href="#/edit-account" className={classes.add} component={Link}>
         Add
       </Button>
       <ConfirmDialog
@@ -192,8 +191,8 @@ const AccountsContent = () => {
         setConfirm={onDelete}
       />
     </>
-  );
-};
+  )
+}
 
 export default function Accounts(props: any) {
   return (
@@ -206,5 +205,5 @@ export default function Accounts(props: any) {
         </>
       }
     />
-  );
+  )
 }

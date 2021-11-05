@@ -1,12 +1,12 @@
 export enum Period {
-  day = "day",
-  week = "week",
-  fortnight = "fortnight",
-  month = "month",
+  day = 'day',
+  week = 'week',
+  fortnight = 'fortnight',
+  month = 'month',
 }
 
 export interface Periodicity {
-  period: Period;
-  start: Date;
-  end?: Date;
+  period: Period
+  start: Date
+  end?: Date
 }

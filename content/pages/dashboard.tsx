@@ -1,8 +1,8 @@
-import { Typography } from "@material-ui/core";
-import React from "react";
-import LeftDrawer from "../../components/LeftDrawer";
-import RootContainer from "../../components/RootContainer";
-import MainContainer from "../../components/MainContainer";
+import { Typography } from '@material-ui/core'
+import React from 'react'
+import LeftDrawer from '../../components/LeftDrawer'
+import RootContainer from '../../components/RootContainer'
+import MainContainer from '../../components/MainContainer'
 
 const DashboardContent = () => (
   <>
@@ -10,7 +10,7 @@ const DashboardContent = () => (
     <br />
     <br />
   </>
-);
+)
 
 export default function Dashboard() {
   return (
@@ -23,5 +23,5 @@ export default function Dashboard() {
         </>
       }
     />
-  );
+  )
 }

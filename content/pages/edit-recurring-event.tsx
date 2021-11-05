@@ -10,17 +10,18 @@ import {
   Select,
   TextField,
   Theme,
-} from "@material-ui/core";
-import React, { ChangeEvent, useCallback, useEffect, useState } from "react";
-import { Link, useHistory } from "react-router-dom";
-import ConfirmDialog from "../../components/ConfirmDialog";
-import LeftDrawer from "../../components/LeftDrawer";
-import MainContainer from "../../components/MainContainer";
-import RootContainer from "../../components/RootContainer";
-import { db } from "../lib/dbaccess";
-import { Category } from "../models/category";
-import { Period } from "../models/periodicity";
-const moment = require("moment");
+} from '@material-ui/core'
+import React, { ChangeEvent, useCallback, useEffect, useState } from 'react'
+import { Link, useHistory } from 'react-router-dom'
+import ConfirmDialog from '../../components/ConfirmDialog'
+import LeftDrawer from '../../components/LeftDrawer'
+import MainContainer from '../../components/MainContainer'
+import RootContainer from '../../components/RootContainer'
+import { getDeadlines } from '../lib/budgeting'
+import { db } from '../lib/dbaccess'
+import { Category } from '../models/category'
+import { Period } from '../models/periodicity'
+const moment = require('moment')
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -31,73 +32,73 @@ const useStyles = makeStyles((theme: Theme) =>
       minWidth: 250,
     },
     cancel: {
-      backgroundColor: "#ffffff",
-      color: "#c9501c",
+      backgroundColor: '#ffffff',
+      color: '#c9501c',
       padding: 10,
       margin: 10,
     },
     submit: {
-      backgroundColor: "#c9501c",
-      color: "#ffffff",
+      backgroundColor: '#c9501c',
+      color: '#ffffff',
       padding: 10,
       margin: 10,
       minWidth: 100,
     },
     delete: {
-      backgroundColor: "#3f51b5",
-      color: "#ffffff",
+      backgroundColor: '#3f51b5',
+      color: '#ffffff',
       marginLeft: 100,
       padding: 10,
       minWidth: 100,
     },
   })
-);
+)
 
 const EditContent = ({ id }: { id: string }) => {
-  const [description, setDescription] = useState("");
-  const [period, setPeriod] = useState("");
-  const [startDate, setStartDate] = useState(moment().format("yyyy-MM-DD"));
-  const [endDate, setEndDate] = useState(
-    moment().add(1, "years").format("yyyy-MM-DD")
-  );
-  const [amount, setAmount] = useState<number>(0);
-  const [category, setCategory] = useState("");
-  const [automatic, setAutomatic] = useState(false);
+  const [description, setDescription] = useState('')
+  const [period, setPeriod] = useState('')
+  const [startDate, setStartDate] = useState(moment.utc().format('yyyy-MM-DD'))
+  const [endDate, setEndDate] = useState(moment.utc().add(1, 'years').format('yyyy-MM-DD'))
+  const [amount, setAmount] = useState<number>(0)
+  const [category, setCategory] = useState('')
+  const [automatic, setAutomatic] = useState(false)
 
-  const [showDialog, setShowDialog] = useState(false);
-  const [found, setFound] = useState(true);
+  const [showDialog, setShowDialog] = useState(false)
+  const [found, setFound] = useState(true)
 
-  const [descriptionError, setDescriptionError] = useState(true);
-  const [amountError, setAmountError] = useState(true);
-  const [startDateError, setStartDateError] = useState(false);
+  const [descriptionError, setDescriptionError] = useState(true)
+  const [amountError, setAmountError] = useState(true)
+  const [periodError, setPeriodError] = useState(true)
+  const [startDateError, setStartDateError] = useState(false)
 
-  const history = useHistory();
-  const classes = useStyles();
+  const history = useHistory()
+  const classes = useStyles()
 
   useEffect(() => {
     if (id) {
       db.recurringEvents.findOne({ _id: id }, (err: Error | null, doc: any) => {
-        console.log(doc);
+        console.log(doc)
 
-        if (!doc) setFound(false);
+        if (!doc) setFound(false)
         else {
-          setFound(true);
+          setFound(true)
 
-          setDescription(doc.description);
-          setPeriod(doc.periodicity.period);
-          setStartDate(moment(doc.periodicity.startDate).format("yyyy-MM-DD"));
-          setEndDate(moment(doc.periodicity.endDate).format("yyyy-MM-DD"));
-          setAmount(doc.amount);
-          setCategory(doc.category);
-          setAutomatic(doc.automatic);
+          setDescription(doc.description)
+          setPeriod(doc.periodicity.period)
+          setStartDate(moment.utc(doc.periodicity.start).format('yyyy-MM-DD'))
+          setEndDate(moment.utc(doc.periodicity.end).format('yyyy-MM-DD'))
+          setAmount(doc.amount)
+          setCategory(doc.category)
+          setAutomatic(doc.automatic)
 
-          setDescriptionError(false);
-          setAmountError(false);
-          setStartDateError(false);
+          setDescriptionError(false)
+          setAmountError(false)
+          setStartDateError(false)
+          setPeriodError(false)
         }
-      });
+      })
     }
-  }, [id]);
+  }, [id])
 
   const onSubmit = useCallback(() => {
     if (!id) {
@@ -108,13 +109,22 @@ const EditContent = ({ id }: { id: string }) => {
           category,
           periodicity: {
             period,
-            startDate,
-            endDate,
+            start: new Date(startDate),
+            end: endDate && new Date(endDate),
           },
           automatic,
         },
-        (err: Error | null, doc: any) => history.push("/recurring-events")
-      );
+        (err: Error | null, doc: any) => {
+          const deadlines = getDeadlines(doc, doc._id)
+          if (deadlines.length) {
+            db.deadlines.insert(deadlines, (err: Error | null, docs: any[]) =>
+              history.push('/recurring-events')
+            )
+          } else {
+            history.push('/recurring-events')
+          }
+        }
+      )
     } else {
       const updateObj: any = {
         description,
@@ -122,103 +132,112 @@ const EditContent = ({ id }: { id: string }) => {
         category,
         periodicity: {
           period,
-          startDate,
-          endDate,
+          start: new Date(startDate),
+          end: new Date(endDate),
         },
         automatic,
-      };
-      console.log(updateObj);
+      }
+      console.log(updateObj)
       db.recurringEvents.update(
         { _id: id },
         updateObj,
         {},
-        (err: Error | null, numUpd: number, ups: boolean) =>
-          history.push("/recurring-events")
-      );
+        (err: Error | null, numUpd: number, ups: boolean) => {
+          const today = moment().startOf('day').toDate()
+          db.deadlines.remove(
+            { eventId: id, date: { $gte: today } },
+            { multi: true },
+            (err: Error | null, amount: number) => {
+              let deadlines = getDeadlines(updateObj, id)
+              if (deadlines.length) {
+                deadlines = deadlines.filter(d => d.date >= today)
+                db.deadlines.insert(deadlines, (err: Error | null, docs: any[]) =>
+                  history.push('/recurring-events')
+                )
+              } else {
+                history.push('/recurring-events')
+              }
+            }
+          )
+        }
+      )
     }
-  }, [
-    id,
-    description,
-    amount,
-    category,
-    period,
-    startDate,
-    endDate,
-    automatic,
-  ]);
+  }, [id, description, amount, category, period, startDate, endDate, automatic])
 
   const validateDesc = (description: string) => {
-    return !(
-      description === null ||
-      description === undefined ||
-      description.length === 0
-    );
-  };
+    return !(description === null || description === undefined || description.length === 0)
+  }
 
   const validateAmount = (amount: number) => {
-    return !!amount;
-  };
+    return !!amount
+  }
 
   const validateStartDate = (date: string) => {
-    return !(date === null || date === undefined) && new Date(date);
-  };
+    return !(date === null || date === undefined) && new Date(date)
+  }
 
-  const showDeleteConfirm = useCallback(() => setShowDialog(true), []);
+  const showDeleteConfirm = useCallback(() => setShowDialog(true), [])
 
   const onDelete = useCallback(() => {
     if (id) {
-      db.recurringEvents.remove(
-        { _id: id },
-        (err: Error | null, amount: number) => history.push("/recurring-events")
-      );
+      db.recurringEvents.remove({ _id: id }, (err: Error | null, amount: number) => {
+        db.deadlines.remove(
+          { eventId: id },
+          { multi: true },
+          (err: Error | null, amount: number) => {
+            history.push('/recurring-events')
+          }
+        )
+      })
     }
-  }, [id]);
+  }, [id])
 
-  const onChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const onChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     switch (event.target.id) {
-      case "description":
+      case 'description':
         if (!validateDesc(event.target.value)) {
-          setDescriptionError(true);
+          setDescriptionError(true)
         } else {
-          setDescriptionError(false);
+          setDescriptionError(false)
         }
-        setDescription(event.target.value);
-        break;
-      case "amount":
+        setDescription(event.target.value)
+        break
+      case 'amount':
         if (!validateAmount(Number(event.target.value))) {
-          setAmountError(true);
+          setAmountError(true)
         } else {
-          setAmountError(false);
+          setAmountError(false)
         }
-        setAmount(Number(event.target.value));
-        break;
-      case "startDate":
+        setAmount(Number(event.target.value))
+        break
+      case 'startDate':
         if (!validateStartDate(event.target.value)) {
-          setStartDateError(true);
+          setStartDateError(true)
         } else {
-          setStartDateError(false);
+          setStartDateError(false)
         }
-        setStartDate(event.target.value);
-        break;
-      case "endDate":
-        setEndDate(event.target.value);
-        break;
+        setStartDate(event.target.value)
+        break
+      case 'endDate':
+        setEndDate(event.target.value)
+        break
     }
-  };
+  }
 
   const onCategoryChange = (event: ChangeEvent<any>) => {
-    setCategory(event.target.value);
-  };
+    setCategory(event.target.value)
+  }
 
   const onPeriodChange = (event: ChangeEvent<any>) => {
-    setPeriod(event.target.value);
-  };
+    if (event.target.value) setPeriodError(false)
+    else setPeriodError(true)
+
+    setPeriod(event.target.value)
+  }
 
   const onAutomaticChange = (event: ChangeEvent<any>) => {
-    setAutomatic(event.target.checked);
-  };
+    setAutomatic(event.target.checked)
+  }
 
   return (
     <>
@@ -230,7 +249,7 @@ const EditContent = ({ id }: { id: string }) => {
             value={description}
             onChange={onChange}
             error={descriptionError}
-            helperText={descriptionError && "Description is required"}
+            helperText={descriptionError && 'Description is required'}
             variant="filled"
             label="Description"
           />
@@ -243,7 +262,7 @@ const EditContent = ({ id }: { id: string }) => {
             value={amount}
             onChange={onChange}
             error={amountError}
-            helperText={amountError && "A nonzero amount is required."}
+            helperText={amountError && 'A nonzero amount is required.'}
             variant="filled"
             label="Amount"
           />
@@ -260,15 +279,15 @@ const EditContent = ({ id }: { id: string }) => {
               {Object.keys(Category)
                 .sort((cat1, cat2) => {
                   if (cat1 < cat2) {
-                    return -1;
+                    return -1
                   }
                   if (cat1 > cat2) {
-                    return 1;
+                    return 1
                   }
 
-                  return 0;
+                  return 0
                 })
-                .map((cat) => (
+                .map(cat => (
                   <MenuItem value={cat}>{cat}</MenuItem>
                 ))}
             </Select>
@@ -282,8 +301,9 @@ const EditContent = ({ id }: { id: string }) => {
               className={classes.select}
               value={period}
               onChange={onPeriodChange}
+              error={periodError}
             >
-              {Object.keys(Period).map((period) => (
+              {Object.keys(Period).map(period => (
                 <MenuItem value={period}>{period}</MenuItem>
               ))}
             </Select>
@@ -297,9 +317,10 @@ const EditContent = ({ id }: { id: string }) => {
             value={startDate}
             onChange={onChange}
             error={startDateError}
-            helperText={startDateError && "Start date is required"}
+            helperText={startDateError && 'Start date is required'}
             variant="filled"
             label="Start Date"
+            disabled={!!id}
           />
           <br />
           <br />
@@ -315,30 +336,20 @@ const EditContent = ({ id }: { id: string }) => {
           <br />
           <br />
           <FormControlLabel
-            control={
-              <Checkbox
-                id="automatic"
-                checked={automatic}
-                onChange={onAutomaticChange}
-              />
-            }
+            control={<Checkbox id="automatic" checked={automatic} onChange={onAutomaticChange} />}
             label="Automatic"
           />
           <br />
           <br />
-          <Button
-            to="/recurring-events"
-            className={classes.cancel}
-            component={Link}
-          >
+          <Button to="/recurring-events" className={classes.cancel} component={Link}>
             Back to event list
           </Button>
           <Button
             onClick={onSubmit}
             className={classes.submit}
-            disabled={descriptionError || amountError || startDateError}
+            disabled={descriptionError || amountError || startDateError || periodError}
           >
-            {id ? "Save" : "Add"}
+            {id ? 'Save' : 'Add'}
           </Button>
           {id && (
             <>
@@ -349,6 +360,7 @@ const EditContent = ({ id }: { id: string }) => {
                 open={showDialog}
                 setOpen={setShowDialog}
                 setConfirm={onDelete}
+                prompt="this event"
               />
             </>
           )}
@@ -357,18 +369,18 @@ const EditContent = ({ id }: { id: string }) => {
         <h3>Event id not found - it may have been deleted.</h3>
       )}
     </>
-  );
-};
+  )
+}
 
 export default function EditRecurringEvent(props: any) {
   const id =
     props.location &&
     props.location.search &&
-    props.location.search.includes("?id=") &&
-    props.location.search.replace("?id=", "");
+    props.location.search.includes('?id=') &&
+    props.location.search.replace('?id=', '')
   return (
     <RootContainer
-      title={id ? "Edit recurring event" : "Add recurring event"}
+      title={id ? 'Edit recurring event' : 'Add recurring event'}
       content={
         <>
           <LeftDrawer />
@@ -376,5 +388,5 @@ export default function EditRecurringEvent(props: any) {
         </>
       }
     />
-  );
+  )
 }

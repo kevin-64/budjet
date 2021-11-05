@@ -3,13 +3,13 @@ import ReactDOM from "react-dom";
 import { HashRouter, Route, Switch } from "react-router-dom";
 import Export from "./export";
 import Dashboard from "./dashboard";
-import EditAccount from "./edit-accounts";
+import EditAccount from "./edit-account";
 import Accounts from "./accounts";
 import RecurringEvents from "./recurring-events";
 import EditRecurringEvent from "./edit-recurring-event";
 import Expenses from "./expenses";
 import EditExpense from "./edit-expense";
-// import Deadlines from "./deadlines";
+import Deadlines from "./deadlines";
 
 const App = () => {
   return (
@@ -18,7 +18,7 @@ const App = () => {
         <Route path="/export" render={(props) => <Export />} />
         <Route path="/accounts" render={(props) => <Accounts {...props} />} />
         <Route
-          path="/edit-accounts"
+          path="/edit-account"
           render={(props) => <EditAccount {...props} />}
         />
         <Route
@@ -34,7 +34,7 @@ const App = () => {
           path="/edit-expense"
           render={(props) => <EditExpense {...props} />}
         />
-        {/* <Route path="/deadlines" render={(props) => <Deadlines {...props} />} /> */}
+        <Route path="/deadlines" render={(props) => <Deadlines {...props} />} />
         <Route path="/">
           <Dashboard />
         </Route>

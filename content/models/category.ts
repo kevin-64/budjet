@@ -11,4 +11,5 @@ export enum Category {
   medical = 'medical',
   house = 'house',
   travel = 'travel',
+  misc = 'misc',
 }

@@ -2,16 +2,16 @@ import {
   Button,
   createStyles,
   FormControl,
+  InputLabel,
   Link,
   makeStyles,
+  MenuItem,
+  Select,
   TextField,
   Theme,
   Toolbar,
-  InputLabel,
-  Select,
-  MenuItem,
 } from '@material-ui/core'
-import { DataGrid, GridColDef, GridCellParams } from '@material-ui/data-grid'
+import { DataGrid, GridCellParams, GridColDef } from '@material-ui/data-grid'
 import moment from 'moment'
 import React, { ChangeEvent, useCallback, useEffect, useState } from 'react'
 import { useHistory } from 'react-router'
@@ -19,6 +19,7 @@ import ConfirmDialog from '../../components/ConfirmDialog'
 import LeftDrawer from '../../components/LeftDrawer'
 import MainContainer from '../../components/MainContainer'
 import RootContainer from '../../components/RootContainer'
+import { getExpenses } from '../lib/budgeting'
 import { db } from '../lib/dbaccess'
 import { Category } from '../models/category'
 
@@ -69,43 +70,19 @@ const ExpensesContent = () => {
   const classes = useStyles()
 
   useEffect(() => {
-    if (!descFilter && !categoryFilter) {
-      db.singleEvents
-        .find({})
-        .sort({ date: 1 })
-        .exec((err: Error | null, docs: any[]) => {
-          setExpenses(
-            docs.map(d => {
-              return {
-                ...d,
-                id: d._id,
-              }
-            })
-          )
-        })
-    } else {
+    async function effect() {
       const filter: any = {}
 
       if (descFilter) filter.description = new RegExp(descFilter, 'i')
       if (categoryFilter) filter.category = new RegExp(categoryFilter, 'i')
 
-      console.log(filter)
-      db.singleEvents
-        .find(filter)
-        .sort({ date: 1 })
-        .exec((err: Error | null, docs: any[]) => {
-          if (docs)
-            setExpenses(
-              docs.map(d => {
-                return {
-                  ...d,
-                  id: d._id,
-                }
-              })
-            )
-        })
+      const expenses = await getExpenses(filter)
+      setExpenses(expenses)
+
+      setRefresh(false)
     }
-    setRefresh(false)
+
+    effect()
   }, [descFilter, categoryFilter, refresh])
 
   const clearFilters = () => {
@@ -134,6 +111,7 @@ const ExpensesContent = () => {
     { field: 'description', headerName: 'Description', width: 600 },
     { field: 'category', headerName: 'Category', width: 400 },
     { field: 'amount', headerName: 'Amount', width: 200 },
+    { field: 'account', headerName: 'Account', width: 200 },
     {
       field: 'date',
       headerName: 'Date',

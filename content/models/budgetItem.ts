@@ -1,9 +1,8 @@
 import { Category } from './category'
 
-export interface SingleEvent {
-  date: Date
+export interface BudgetItem {
   description: string
   amount: number
   category: Category
-  accountId: string
+  exact: boolean
 }

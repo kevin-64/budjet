@@ -1,15 +1,16 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { HashRouter, Route, Switch } from 'react-router-dom'
-import Export from './export'
-import Dashboard from './dashboard'
-import EditAccount from './edit-account'
 import Accounts from './accounts'
-import RecurringEvents from './recurring-events'
+import Budget from './budget'
+import Dashboard from './dashboard'
+import Deadlines from './deadlines'
+import EditAccount from './edit-account'
+import EditExpense from './edit-expense'
 import EditRecurringEvent from './edit-recurring-event'
 import Expenses from './expenses'
-import EditExpense from './edit-expense'
-import Deadlines from './deadlines'
+import Export from './export'
+import RecurringEvents from './recurring-events'
 
 const App = () => {
   return (
@@ -23,6 +24,7 @@ const App = () => {
         <Route path="/expenses" render={props => <Expenses {...props} />} />
         <Route path="/edit-expense" render={props => <EditExpense {...props} />} />
         <Route path="/deadlines" render={props => <Deadlines {...props} />} />
+        <Route path="/budget" render={props => <Budget {...props} />} />
         <Route path="/">
           <Dashboard />
         </Route>

@@ -17,8 +17,9 @@ import ConfirmDialog from '../../components/ConfirmDialog'
 import LeftDrawer from '../../components/LeftDrawer'
 import MainContainer from '../../components/MainContainer'
 import RootContainer from '../../components/RootContainer'
-import { getDeadlines } from '../lib/budgeting'
+import { calculateDeadlines } from '../lib/budgeting'
 import { db } from '../lib/dbaccess'
+import { Account } from '../models/account'
 import { Category } from '../models/category'
 import { Period } from '../models/periodicity'
 const moment = require('moment')
@@ -62,6 +63,8 @@ const EditContent = ({ id }: { id: string }) => {
   const [amount, setAmount] = useState<number>(0)
   const [category, setCategory] = useState('')
   const [automatic, setAutomatic] = useState(false)
+  const [accountId, setAccountId] = useState('')
+  const [accounts, setAccounts] = useState<Account[]>([])
 
   const [showDialog, setShowDialog] = useState(false)
   const [found, setFound] = useState(true)
@@ -70,9 +73,22 @@ const EditContent = ({ id }: { id: string }) => {
   const [amountError, setAmountError] = useState(true)
   const [periodError, setPeriodError] = useState(true)
   const [startDateError, setStartDateError] = useState(false)
+  const [accountError, setAccountError] = useState(true)
 
   const history = useHistory()
   const classes = useStyles()
+
+  //initial loading of accounts, performed only once
+  useEffect(() => {
+    db.accounts
+      .find({})
+      .sort({ name: 1 })
+      .exec((err: Error | null, docs: any[]) => {
+        if (!err && docs.length) {
+          setAccounts(docs)
+        }
+      })
+  }, [])
 
   useEffect(() => {
     if (id) {
@@ -90,11 +106,13 @@ const EditContent = ({ id }: { id: string }) => {
           setAmount(doc.amount)
           setCategory(doc.category)
           setAutomatic(doc.automatic)
+          setAccountId(doc.accountId)
 
           setDescriptionError(false)
           setAmountError(false)
           setStartDateError(false)
           setPeriodError(false)
+          setAccountError(false)
         }
       })
     }
@@ -112,12 +130,13 @@ const EditContent = ({ id }: { id: string }) => {
             start: new Date(startDate),
             end: endDate && new Date(endDate),
           },
+          accountId,
           automatic,
         },
         (err: Error | null, doc: any) => {
           if (!automatic) {
             //automatic events do not need deadlines to remember them
-            const deadlines = getDeadlines(doc, doc._id)
+            const deadlines = calculateDeadlines(doc, doc._id)
             if (deadlines.length) {
               db.deadlines.insert(deadlines, (err: Error | null, docs: any[]) =>
                 history.push('/recurring-events')
@@ -140,6 +159,7 @@ const EditContent = ({ id }: { id: string }) => {
           start: new Date(startDate),
           end: new Date(endDate),
         },
+        accountId,
         automatic,
       }
       console.log(updateObj)
@@ -154,7 +174,7 @@ const EditContent = ({ id }: { id: string }) => {
             { multi: true },
             (err: Error | null, amount: number) => {
               if (!updateObj.automatic) {
-                let deadlines = getDeadlines(updateObj, id)
+                let deadlines = calculateDeadlines(updateObj, id)
                 if (deadlines.length) {
                   deadlines = deadlines.filter(d => d.date >= today)
                   db.deadlines.insert(deadlines, (err: Error | null, docs: any[]) =>
@@ -171,7 +191,7 @@ const EditContent = ({ id }: { id: string }) => {
         }
       )
     }
-  }, [id, description, amount, category, period, startDate, endDate, automatic])
+  }, [id, description, amount, category, period, startDate, endDate, automatic, accountId])
 
   const validateDesc = (description: string) => {
     return !(description === null || description === undefined || description.length === 0)
@@ -248,6 +268,13 @@ const EditContent = ({ id }: { id: string }) => {
     setAutomatic(event.target.checked)
   }
 
+  const onAccountChange = (event: ChangeEvent<any>) => {
+    if (event.target.value) setAccountError(false)
+    else setAccountError(true)
+
+    setAccountId(event.target.value)
+  }
+
   return (
     <>
       {found ? (
@@ -319,6 +346,22 @@ const EditContent = ({ id }: { id: string }) => {
           </FormControl>
           <br />
           <br />
+          <FormControl variant="filled">
+            <InputLabel htmlFor="account">Account</InputLabel>
+            <Select
+              id="account"
+              className={classes.select}
+              value={accountId}
+              onChange={onAccountChange}
+              error={accountError}
+            >
+              {accounts.map(account => (
+                <MenuItem value={(account as any)._id}>{account.name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <br />
+          <br />
           <TextField
             id="startDate"
             className={classes.mediumText}
@@ -356,7 +399,9 @@ const EditContent = ({ id }: { id: string }) => {
           <Button
             onClick={onSubmit}
             className={classes.submit}
-            disabled={descriptionError || amountError || startDateError || periodError}
+            disabled={
+              descriptionError || amountError || startDateError || periodError || accountError
+            }
           >
             {id ? 'Save' : 'Add'}
           </Button>

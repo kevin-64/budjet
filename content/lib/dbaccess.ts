@@ -5,6 +5,7 @@ interface Collections {
   recurringEvents: Nedb
   singleEvents: Nedb
   deadlines: Nedb
+  budgets: Nedb
 }
 
 export const db: Collections = {
@@ -15,6 +16,7 @@ export const db: Collections = {
   }),
   singleEvents: new datastore({ filename: 'jet_sinevents.db', autoload: true }),
   deadlines: new datastore({ filename: 'jet_deadlines.db', autoload: true }),
+  budgets: new datastore({ filename: 'jet_budgets.db', autoload: true }),
 }
 
 export async function getDbContentForExport(): Promise<string> {
@@ -46,17 +48,26 @@ export async function getDbContentForExport(): Promise<string> {
     })
   })
 
-  const [accounts, recEvents, sinEvents, deadlines] = await Promise.all([
+  const getBudgets = new Promise<any[]>((resolve, reject) => {
+    db.budgets.find({}, (err: Error | null, docs: any[]) => {
+      if (err) reject(err)
+      resolve(docs)
+    })
+  })
+
+  const [accounts, recEvents, sinEvents, deadlines, budgets] = await Promise.all([
     getAccounts,
     getRecEvents,
     getSinEvents,
     getDeadlines,
+    getBudgets,
   ])
   return JSON.stringify({
     accounts: [...accounts],
     recurringEvents: [...recEvents],
     singleEvents: [...sinEvents],
     deadlines: [...deadlines],
+    budgets: [...budgets],
   })
 }
 
@@ -66,6 +77,7 @@ export async function importDbContent(content: string): Promise<void> {
     recurringEvents: any[]
     singleEvents: any[]
     deadlines: any[]
+    budgets: any[]
   }
 
   await new Promise<void>((resolve, reject) => {
@@ -91,6 +103,13 @@ export async function importDbContent(content: string): Promise<void> {
 
   await new Promise<void>((resolve, reject) => {
     db.deadlines.remove({}, { multi: true }, (err: Error | null, count: number) => {
+      if (err) reject(err)
+      resolve()
+    })
+  })
+
+  await new Promise<void>((resolve, reject) => {
+    db.budgets.remove({}, { multi: true }, (err: Error | null, count: number) => {
       if (err) reject(err)
       resolve()
     })
@@ -124,5 +143,18 @@ export async function importDbContent(content: string): Promise<void> {
     })
   })
 
-  await Promise.all([insertAccounts, insertRecEvents, insertSinEvents, insertDeadlines])
+  const insertBudgets = new Promise<void>((resolve, reject) => {
+    db.budgets.insert(dbContent.budgets, (err: Error | null, docs: any[]) => {
+      if (err) reject(err)
+      resolve()
+    })
+  })
+
+  await Promise.all([
+    insertAccounts,
+    insertRecEvents,
+    insertSinEvents,
+    insertDeadlines,
+    insertBudgets,
+  ])
 }

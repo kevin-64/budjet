@@ -2,16 +2,16 @@ import {
   Button,
   createStyles,
   FormControl,
+  InputLabel,
   Link,
   makeStyles,
+  MenuItem,
+  Select,
   TextField,
   Theme,
   Toolbar,
-  InputLabel,
-  Select,
-  MenuItem,
 } from '@material-ui/core'
-import { DataGrid, GridColDef, GridCellParams } from '@material-ui/data-grid'
+import { DataGrid, GridCellParams, GridColDef } from '@material-ui/data-grid'
 import moment from 'moment'
 import React, { ChangeEvent, useCallback, useEffect, useState } from 'react'
 import { useHistory } from 'react-router'
@@ -19,6 +19,7 @@ import ConfirmDialog from '../../components/ConfirmDialog'
 import LeftDrawer from '../../components/LeftDrawer'
 import MainContainer from '../../components/MainContainer'
 import RootContainer from '../../components/RootContainer'
+import { getRecurringEvents } from '../lib/budgeting'
 import { db } from '../lib/dbaccess'
 import { Category } from '../models/category'
 
@@ -78,43 +79,18 @@ const RecurringEventsContent = () => {
   const classes = useStyles()
 
   useEffect(() => {
-    if (!descFilter && !categoryFilter) {
-      db.recurringEvents
-        .find({})
-        .sort({ 'periodicity.start': 1 })
-        .exec((err: Error | null, docs: any[]) => {
-          setEvents(
-            docs.map(d => {
-              return {
-                ...d,
-                id: d._id,
-              }
-            })
-          )
-        })
-    } else {
+    async function effect() {
       const filter: any = {}
 
       if (descFilter) filter.description = new RegExp(descFilter, 'i')
       if (categoryFilter) filter.category = new RegExp(categoryFilter, 'i')
 
-      console.log(filter)
-      db.recurringEvents
-        .find(filter)
-        .sort({ 'periodicity.start': 1 })
-        .exec((err: Error | null, docs: any[]) => {
-          if (docs)
-            setEvents(
-              docs.map(d => {
-                return {
-                  ...d,
-                  id: d._id,
-                }
-              })
-            )
-        })
+      const events = await getRecurringEvents(filter)
+      setEvents(events)
+      setRefresh(false)
     }
-    setRefresh(false)
+
+    effect()
   }, [descFilter, categoryFilter, refresh])
 
   const clearFilters = () => {
@@ -149,6 +125,7 @@ const RecurringEventsContent = () => {
     { field: 'description', headerName: 'Description', width: 600 },
     { field: 'category', headerName: 'Category', width: 400 },
     { field: 'amount', headerName: 'Amount', width: 200 },
+    { field: 'account', headerName: 'Account', width: 200 },
     {
       field: 'period',
       headerName: 'Frequency',

@@ -16,6 +16,7 @@ import LeftDrawer from '../../components/LeftDrawer'
 import MainContainer from '../../components/MainContainer'
 import RootContainer from '../../components/RootContainer'
 import { db } from '../lib/dbaccess'
+import { Account } from '../models/account'
 import { Category } from '../models/category'
 const moment = require('moment')
 
@@ -61,6 +62,8 @@ const EditContent = ({ id }: { id: string }) => {
   const [date, setDate] = useState(moment().format('yyyy-MM-DD'))
   const [amount, setAmount] = useState<number>(0)
   const [category, setCategory] = useState('')
+  const [accountId, setAccountId] = useState('')
+  const [accounts, setAccounts] = useState<Account[]>([])
 
   const [showDialog, setShowDialog] = useState(false)
   const [found, setFound] = useState(true)
@@ -68,9 +71,22 @@ const EditContent = ({ id }: { id: string }) => {
   const [descriptionError, setDescriptionError] = useState(true)
   const [amountError, setAmountError] = useState(true)
   const [dateError, setDateError] = useState(false)
+  const [accountError, setAccountError] = useState(true)
 
   const history = useHistory()
   const classes = useStyles()
+
+  //initial loading of accounts, performed only once
+  useEffect(() => {
+    db.accounts
+      .find({})
+      .sort({ name: 1 })
+      .exec((err: Error | null, docs: any[]) => {
+        if (!err && docs.length) {
+          setAccounts(docs)
+        }
+      })
+  }, [])
 
   useEffect(() => {
     if (id) {
@@ -85,10 +101,12 @@ const EditContent = ({ id }: { id: string }) => {
           setDate(moment.utc(doc.date).format('yyyy-MM-DD'))
           setAmount(doc.amount)
           setCategory(doc.category)
+          setAccountId(doc.accountId)
 
           setDescriptionError(false)
           setAmountError(false)
           setDateError(false)
+          setAccountError(false)
         }
       })
     }
@@ -102,6 +120,7 @@ const EditContent = ({ id }: { id: string }) => {
           amount,
           category,
           date,
+          accountId,
         },
         (err: Error | null, doc: any) => history.push('/expenses')
       )
@@ -111,6 +130,7 @@ const EditContent = ({ id }: { id: string }) => {
         amount,
         category,
         date,
+        accountId,
       }
       console.log(updateObj)
       db.singleEvents.update(
@@ -120,7 +140,7 @@ const EditContent = ({ id }: { id: string }) => {
         (err: Error | null, numUpd: number, ups: boolean) => history.push('/expenses')
       )
     }
-  }, [id, description, amount, category, date])
+  }, [id, description, amount, category, date, accountId])
 
   const validateDesc = (description: string) => {
     return !(description === null || description === undefined || description.length === 0)
@@ -175,6 +195,13 @@ const EditContent = ({ id }: { id: string }) => {
 
   const onCategoryChange = (event: ChangeEvent<any>) => {
     setCategory(event.target.value)
+  }
+
+  const onAccountChange = (event: ChangeEvent<any>) => {
+    if (event.target.value) setAccountError(false)
+    else setAccountError(true)
+
+    setAccountId(event.target.value)
   }
 
   return (
@@ -232,6 +259,22 @@ const EditContent = ({ id }: { id: string }) => {
           </FormControl>
           <br />
           <br />
+          <FormControl variant="filled">
+            <InputLabel htmlFor="account">Account</InputLabel>
+            <Select
+              id="account"
+              className={classes.select}
+              value={accountId}
+              onChange={onAccountChange}
+              error={accountError}
+            >
+              {accounts.map(account => (
+                <MenuItem value={(account as any)._id}>{account.name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <br />
+          <br />
           <TextField
             id="date"
             className={classes.mediumText}
@@ -251,7 +294,7 @@ const EditContent = ({ id }: { id: string }) => {
           <Button
             onClick={onSubmit}
             className={classes.submit}
-            disabled={descriptionError || amountError || dateError}
+            disabled={descriptionError || amountError || dateError || accountError}
           >
             {id ? 'Save' : 'Add'}
           </Button>
